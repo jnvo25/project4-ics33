@@ -68,27 +68,31 @@ class Check_Annotation:
         #   elements (thus are indirectly recursive)
 
         # We start by comparing check's function annotation to its arguments
+#         print("Annotation: ", annot, annot == list, isinstance(annot, list))
         if annot == None:
             pass
         
         
-        elif isinstance(annot, type):
-            if not isinstance(value, annot):
-                raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = '{value}'
-    was type {type(value)} ...should be type {annot}""")
+#         elif isinstance(annot, type):
+#             if not isinstance(value, annot):
+#                 raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = '{value}'
+#     was type {type(value)} ...should be type {annot}""")
                 
                 
-        elif isinstance(annot, list):
+        elif annot == list:
             if not isinstance(value, list):
                 raise AssertionError(f"""'{param}' failed annotaion check(wrong type): value = {value}
     was type {type(value)} ...should be type list""")
                 
             if len(annot) == 1:
                 annot_type = annot[0]
-                for element in value:
+                for index, element in enumerate(value):
                     if not isinstance(element, annot_type):
+                        check_history += f"list[{index}] check: {annot_type}\n"
                         raise AssertionError(f"""'{param}' failed annotaion check(wrong type): value = {value}
-    was type {type(value)} ...should be type {annot}""")
+    was type {type(value)} ...should be type {annot}\n{check_history}""")
+                        
+                    
             ## need to add to check_history
             else:
                 if len(annot) != len(value):
@@ -232,7 +236,7 @@ dict value check: {annot_value}""")
             # Check the annotation for each of the annotated parameters
             arguments = param_arg_bindings()
             annots = self._f.__annotations__
-            print(arguments, annots)
+#             print(arguments, annots)
             for param, value in arguments.items():
                 if param in annots:
                     annot = annots[param]
@@ -247,22 +251,20 @@ dict value check: {annot_value}""")
             
         # On first AssertionError, print the source lines of the function and reraise 
         except AssertionError:
-            print(80*'-')
-            for l in inspect.getsourcelines(self._f)[0]: # ignore starting line #
-                print(l.rstrip())
-            print(80*'-')
+#             print(80*'-')
+#             for l in inspect.getsourcelines(self._f)[0]: # ignore starting line #
+#                 print(l.rstrip())
+#             print(80*'-')
             raise
-
 
 
 
   
 if __name__ == '__main__':     
     # an example of testing a simple annotation  
-    def f(x:lambda x : x>0): pass
+    def f(x:[int]): pass
     f = Check_Annotation(f)
-    f(3)
-    f('a')
+#     f([1, 'a'])
            
     #driver tests
     import driver
