@@ -65,47 +65,37 @@ class Check_Annotation:
         # Define local functions for checking, list/tuple, dict, set/frozenset,
         #   lambda/functions, and str (str for extra credit)
         # Many of these local functions called by check, call check on their
-        #   elements (thus are indirectly recursive)
-
+        #   elements (thus are indirectly recursiv
         # We start by comparing check's function annotation to its arguments
 #         print("Annotation: ", annot, annot == list, isinstance(annot, list))
-        if annot == None:
-            pass
         
-        
-#         elif isinstance(annot, type):
-#             if not isinstance(value, annot):
-#                 raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = '{value}'
-#     was type {type(value)} ...should be type {annot}""")
-                
-                
-        elif annot == list:
+        def checkList(self):
+            # if value is not a list raise error
             if not isinstance(value, list):
                 raise AssertionError(f"""'{param}' failed annotaion check(wrong type): value = {value}
     was type {type(value)} ...should be type list""")
-                
+            
+            # check for consistency if annot is 1 element
             if len(annot) == 1:
                 annot_type = annot[0]
                 for index, element in enumerate(value):
-                    if not isinstance(element, annot_type):
-                        check_history += f"list[{index}] check: {annot_type}\n"
-                        raise AssertionError(f"""'{param}' failed annotaion check(wrong type): value = {value}
-    was type {type(value)} ...should be type {annot}\n{check_history}""")
-                        
+                    local_check_history = f"list[{index}] check: {annot_type}\n"
+                    self.check(param, annot_type, element, check_history+local_check_history)
                     
-            ## need to add to check_history
+            # check for equality for both
             else:
                 if len(annot) != len(value):
                     raise AssertionError(f"""'{param}' failed annotaion check(wrong number of elements): value = {value}
-    annotation had {len(annot)} elements{annot}""")
+    annotation had {len(annot)} elements{annot}
+    {check_history}""")
                 for index in range(len(value)):
-                    if not isinstance(value[index], annot[index]):
-                        raise AssertionError(f"""'{param}' failed annotaion check(wrong type): value = {value}
-    was type {type(value[index])} ...should be type {annot[index]}""")
-        #need to add to check_history
-        
-        
-        elif isinstance(annot, tuple):
+                    local_check_history = f"list[{value[index]}] check: {annot[index]}\n"
+                    #print(check_history + local_check_history)
+
+                    self.check(param, annot[index], value[index], check_history+local_check_history)
+                    
+
+        def checkTuple(self):
             if not isinstance(value, tuple):
                 raise AssertionError(f"""'{param}' failed annotaion check(wrong type): value = {value}
     was type {type(value)} ...should be type tuple""")
@@ -113,9 +103,7 @@ class Check_Annotation:
             if len(annot) == 1:
                 annot_type = annot[0]
                 for element in value:
-                    if not isinstance(element, annot_type):
-                        raise AssertionError(f"""'{param}' failed annotaion check(wrong type): value = {value}
-    was type {type(value)} ...should be type {annot}""")
+                    self.check(param, annot_type, element, check_history)
             ## need to add to check_history
             
             else:
@@ -123,12 +111,9 @@ class Check_Annotation:
                     raise AssertionError(f"""'{param}' failed annotaion check(wrong number of elements): value = {value}
     annotation had {len(annot)} elements{annot}""")
                 for index in range(len(value)):
-                    if not isinstance(value[index], annot[index]):
-                        raise AssertionError(f"""'{param}' failed annotaion check(wrong type): value = {value}
-    was type {type(value[index])} ...should be type {annot[index]}""") 
-        
-        
-        elif isinstance(annot, dict):
+                    self.check(param, annot[index], value[index], check_history) 
+            
+        def checkDict(self):
             if not isinstance(value, dict):
                 raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = {value}
     was type {type(value)} ...should be type dict""")
@@ -137,46 +122,54 @@ class Check_Annotation:
                 raise AssertionError(f"""'{param}' annotation inconsistency: set should have # value but had #
     annotation = {annot}""")
             else:
-                annot_key = annot.keys()[0]
-                annot_value = annot.values()[0]
-                for key, value in value.items():
-                    if not isinstance(key, annot_key):
-                        raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = #
-    was type {type(key)} ...should be type {annot_key}
-dict key check: {annot_key}""")
-                    if not isinstance(value, annot_value):
-                        raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = #
-    was type {type(value)} ...should be type {annot_value}
-dict value check: {annot_value}""")
-                    
+                annot_key = list(annot.keys())[0]
+                annot_value = list(annot.values())[0]
+                for key, v in value.items():
+                    self.check(param, annot_key, key, check_history)
+                    self.check(param, annot_value, v, check_history)
+        
+        def checkSet(self):
+            if len(annot) != 1:
+                raise AssertionError(f"""'{param}' annotation inconsistency: {annot} should have 1 value but had {len(annot)}
+    annotation = {annot}""")
+            else:
+                for element in value:
+                    self.check(param, list(annot)[0], element, check_history)
+
+        
+            
+        
+        if annot == None:
+            pass
+        
+        
+        elif isinstance(annot, type):
+            if not isinstance(value, annot):
+                raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = '{value}'
+    was type {type(value)} ...should be type {annot}
+    {check_history}""")
+                
+                
+        elif isinstance(annot, list):
+            checkList(self)
+        
+        elif isinstance(annot, tuple):
+            checkTuple(self)
+            
+        elif isinstance(annot, dict):
+            checkDict(self) 
             
         elif isinstance(annot, set):
             if not isinstance(value, set):
                 raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = {value}
     was type {type(value)} ...should be type set""")
-            if len(annot) != 1:
-                raise AssertionError(f"""'{param}' annotation inconsistency: set should have 1 value but had {len(annot)}
-    annotation = {annot}""")
-            else:
-                for element in value:
-                    if not isinstance(element, annot[0]):
-                        raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = {element}
-    was type {type(element)} ...should be type {annot[0]} """)
-                    
+            checkSet(self)            
         
         elif isinstance(annot, frozenset):
             if not isinstance(value, frozenset):
                 raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = {value}
     was type {type(value)} ...should be type frozenset""")
-            if len(annot) != 1:
-                raise AssertionError(f"""'{param}' annotation inconsistency: set should have 1 value but had {len(annot)}
-    annotation = {annot}""")
-            else:
-                for element in value:
-                    if not isinstance(element, annot[0]):
-                        raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = {element}
-    was type {type(element)} ...should be type {annot[0]} """)
-                        
+            checkSet(self)
                         
         elif inspect.isfunction(annot):
             if len( annot.__code__.co_varnames) != 1:
@@ -243,11 +236,12 @@ dict value check: {annot_value}""")
                     self.check(param, annot, value)
             
             # Compute/remember the value of the decorated function
-            
+            value = self._f(*args, **kargs)
             # If 'return' is in the annotation, check it
-            
+            if 'return' in annots:
+                self.check('return', annots['return'], value)
             # Return the decorated answer
-            
+            return value
             
         # On first AssertionError, print the source lines of the function and reraise 
         except AssertionError:
@@ -263,7 +257,7 @@ dict value check: {annot_value}""")
 if __name__ == '__main__':     
     # an example of testing a simple annotation  
     def f(x:[int]): pass
-    f = Check_Annotation(f)
+#     f = Check_Annotation(f)
 #     f([1, 'a'])
            
     #driver tests
