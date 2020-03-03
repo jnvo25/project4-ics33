@@ -183,17 +183,13 @@ class Check_Annotation:
     predicate = {annot}""")
             
             try:
-                if len(value) > 1:
-                    for index, element in enumerate(value):
-                        local_check_history = f"list[{index}] check: {annot}\n"
-                        self.check(param, annot, element, check_history+local_check_history)
-                elif not annot(value):
-                    raise AssertionError(f"""'{param}' failed annotation check: value = {value}
-    predicate = {annot}""")
-            except:
+                x = annot(value)
+            except Exception as e:
+                raise AssertionError(f''''{param}' annotation predicate{annot} raised exception
+    exception = {e}''')
+            if not x:
                 raise AssertionError(f"""'{param}' failed annotation check: value = {value}
-    predicate = {annot}""")
-                
+    predicate = {annot}""") 
                 
         else:
             flag = False
@@ -202,10 +198,10 @@ class Check_Annotation:
             except AttributeError:
                 # Skip next except to raise special assertion
                 flag = True
-            except:
+            except Exception as e:
                 #  program raises exception
                 raise AssertionError(f"""'{param}' annotation {value} raised exception
-    exception = #exception_name""")
+    exception = {e}""")
             # Special assertion for attributition error
             if flag:
                 raise AssertionError(f"""'{param}' annotation undecipherable: {value}""")
@@ -267,8 +263,8 @@ class Check_Annotation:
 if __name__ == '__main__':     
     # an example of testing a simple annotation  
     def f(x:lambda x : x>0): pass
-    f = Check_Annotation(f)
-    f([1,0])
+#     f = Check_Annotation(f)
+#     f([1,0])
            
     #driver tests
     import driver
