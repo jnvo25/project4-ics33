@@ -89,9 +89,7 @@ class Check_Annotation:
     annotation had {len(annot)} elements{annot}
     {check_history}""")
                 for index in range(len(value)):
-                    local_check_history = f"list[{value[index]}] check: {annot[index]}\n"
-                    #print(check_history + local_check_history)
-
+                    local_check_history = f"list[{index}] check: {annot[index]}\n"
                     self.check(param, annot[index], value[index], check_history+local_check_history)
                     
 
@@ -103,15 +101,18 @@ class Check_Annotation:
             if len(annot) == 1:
                 annot_type = annot[0]
                 for element in value:
-                    self.check(param, annot_type, element, check_history)
+                    local_check_history = f"list[{element}] check: {annot_type}\n"
+                    self.check(param, annot_type, element, check_history+local_check_history)
             ## need to add to check_history
             
             else:
                 if len(annot) != len(value):
                     raise AssertionError(f"""'{param}' failed annotaion check(wrong number of elements): value = {value}
-    annotation had {len(annot)} elements{annot}""")
+    annotation had {len(annot)} elements{annot}
+    {check_history}""")
                 for index in range(len(value)):
-                    self.check(param, annot[index], value[index], check_history) 
+                    local_check_history = f"list[{index}] check: {annot[index]}\n"
+                    self.check(param, annot[index], value[index], check_history+local_check_history) 
             
         def checkDict(self):
             if not isinstance(value, dict):
@@ -119,14 +120,18 @@ class Check_Annotation:
     was type {type(value)} ...should be type dict""")
             
             if len(annot) != 1:
-                raise AssertionError(f"""'{param}' annotation inconsistency: set should have # value but had #
+                raise AssertionError(f"""'{param}' annotation inconsistency: set should have 1 value but had {len(annot)}
     annotation = {annot}""")
             else:
                 annot_key = list(annot.keys())[0]
+                for key in value.keys():
+                    local_check_history = f"dict key check: {annot_key}\n"
+                    self.check(param, annot_key, key, check_history+local_check_history)
+                    
                 annot_value = list(annot.values())[0]
-                for key, v in value.items():
-                    self.check(param, annot_key, key, check_history)
-                    self.check(param, annot_value, v, check_history)
+                for v in value.values():
+                    local_check_history = f"dict value check: {annot_value}\n"
+                    self.check(param, annot_value, v, check_history+local_check_history)
         
         def checkSet(self):
             if len(annot) != 1:
@@ -134,7 +139,8 @@ class Check_Annotation:
     annotation = {annot}""")
             else:
                 for element in value:
-                    self.check(param, list(annot)[0], element, check_history)
+                    local_check_history = f"set value check: {list(annot)[0]}\n"
+                    self.check(param, list(annot)[0], element, check_history+local_check_history)
 
         
             
@@ -177,7 +183,11 @@ class Check_Annotation:
     predicate = {annot}""")
             
             try:
-                if not annot(value):
+                if len(value) > 1:
+                    for index, element in enumerate(value):
+                        local_check_history = f"list[{index}] check: {annot}\n"
+                        self.check(param, annot, element, check_history+local_check_history)
+                elif not annot(value):
                     raise AssertionError(f"""'{param}' failed annotation check: value = {value}
     predicate = {annot}""")
             except:
@@ -256,9 +266,9 @@ class Check_Annotation:
   
 if __name__ == '__main__':     
     # an example of testing a simple annotation  
-    def f(x:[int]): pass
-#     f = Check_Annotation(f)
-#     f([1, 'a'])
+    def f(x:lambda x : x>0): pass
+    f = Check_Annotation(f)
+    f([1,0])
            
     #driver tests
     import driver
