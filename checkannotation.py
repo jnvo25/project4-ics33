@@ -1,3 +1,8 @@
+# Submitter: juliethl (Lai, Juliette)
+# Partner: jonatnv1 (Vo, Jonathan)
+# We certify that we worked cooperatively on this programming
+#   assignment, according to the rules for pair programming
+
 from goody import type_as_str
 import inspect
 
@@ -181,6 +186,21 @@ class Check_Annotation:
             if len( annot.__code__.co_varnames) != 1:
                 raise AssertionError(f"""'{param}' annotation inconsistency: predicate should have 1 parameter but had {len( annot.__code__.co_varnames)}
     predicate = {annot}""")
+<<<<<<< HEAD
+
+            if isinstance(value, list):
+                for index, element in enumerate(value):
+                    local_check_history = f"list[{index}] check: {annot}\n"
+                    self.check(param, annot, element, check_history+local_check_history)
+            else:
+                try:
+                    x = annot(value)
+                except Exception as exception:
+                    raise AssertionError(f"""'{param}' annotation predicate({annot}) raised exception\n exception = {type(exception).__name__}: {exception}\n{check_history}""")
+                if not x:
+                    raise AssertionError(f"""'{param}' failed annotation check: value = {value}
+    predicate = {annot}\n{check_history}""")
+=======
             
             try:
                 x = annot(value)
@@ -190,6 +210,7 @@ class Check_Annotation:
             if not x:
                 raise AssertionError(f"""'{param}' failed annotation check: value = {value}
     predicate = {annot}""") 
+>>>>>>> 31aea82605ffa5801c399b5595772725027fbff3
                 
         else:
             flag = False
@@ -201,11 +222,15 @@ class Check_Annotation:
             except Exception as e:
                 #  program raises exception
                 raise AssertionError(f"""'{param}' annotation {value} raised exception
+<<<<<<< HEAD
+    exception = #exception_name\n{check_history}""")
+=======
     exception = {e}""")
+>>>>>>> 31aea82605ffa5801c399b5595772725027fbff3
             # Special assertion for attributition error
             if flag:
-                raise AssertionError(f"""'{param}' annotation undecipherable: {value}""")
-            
+                raise AssertionError(f"""'{param}' annotation undecipherable: {value}\n{check_history}""")
+        
             if not isinstance(value, annot):
                 raise AssertionError(f"""'{param}' failed annotation check(wrong type): value = {value}
     was type {type(value)} ...should be type {annot}""")
@@ -262,9 +287,15 @@ class Check_Annotation:
   
 if __name__ == '__main__':     
     # an example of testing a simple annotation  
+<<<<<<< HEAD
+#     def f(x:Bag([str])): pass
+#     f = Check_Annotation(f)
+#     f([1,'a'])
+=======
     def f(x:lambda x : x>0): pass
 #     f = Check_Annotation(f)
 #     f([1,0])
+>>>>>>> 31aea82605ffa5801c399b5595772725027fbff3
            
     #driver tests
     import driver
